@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Friend Finder</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="jumbotron">
+            <h1>Friend Finder</h1>
+            <h3>List yourself!</h3>
+            <hr>
+            <a href="/home"><button class="btn btn-danger btn-lg">Home</button></a>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div id="modal"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Post yourself!</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" role="form">
+
+                            <div class="form-group">
+                                <label for="name">Name</label>
+                                <input type="text" class="form-control" id="name">
+                            </div>
+                            <p>PLEASE ANSWER ALL QUESTIONS WITH A NUMBER 1 - 5</p>
+                            <p>1 BEING DISLIKE/DISAGREE || 5 BEING LIKE/AGREE</p>
+                            <hr>
+                            <div class="form-group">
+                                <label for="q1">DO YOU GO RIGHT FOR THE LAST PIECE OF PIZZA?</label>
+                                <input type="number" min="1" max="5" class="form-control" id="pizza">
+                            </div>
+                            <div class="form-group">
+                                <label for="q2">WOULD YOU BREAK ME OFF A PIECE OF THAT KIT KAT BAR?</label>
+                                <input type="number" min="1" max="5" class="form-control" id="kitkat">
+                            </div>
+                            <div class="form-group">
+                                <label for="q3">DO YOU LIKE YOUR MUSIC LOUD?</label>
+                                <input type="number" min="1" max="5" class="form-control" id="music">
+                            </div>
+                            <div class="form-group">
+                                <label for="q4">DO YOU LIKE CHEESE?</label>
+                                <input type="number" min="1" max="5" class="form-control" id="cheese">
+                            </div>
+                            <div class="form-group">
+                                <label for="q5">DO YOU LIKE CATS?</label>
+                                <input type="number" min="1" max="5" class="form-control" id="cats">
+                            </div>
+                            <div class="form-group">
+                                <label for="q6">DO YOU LIKE DOGS</label>
+                                <input type="number" min="1" max="5" class="form-control" id="dogs">
+                            </div><div class="form-group">
+                                <label for="q7">DO YOU LIKE TRAVEL</label>
+                                <input type="number" min="1" max="5" class="form-control" id="travel">
+                            </div>
+                            <div class="form-group">
+                                <label for="q8">ONCE YOU POP (A CAN OF PRINGLES) THE FUN DON'T STOP?</label>
+                                <input type="number" min="1" max="5" class="form-control" id="pringles">
+                            </div>
+                            <div class="form-group">
+                                <label for="q9">DO YOU LIKE REALITY TV?</label>
+                                <input type="number" min="1" max="5" class="form-control" id="tv">
+                            </div>
+                            <div class="form-group">
+                                <label for="q10">DO YOU LIKE SILLY MOVIES</label>
+                                <input type="number" min=1 max=5 class="form-control" id="movies">
+                            </div>
+                        </form>
+                        <br>
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-primary btn-md" id="add-btn"> Add to the list</button>
+                        </div>
+                    </div>
+                </div>
+                <p>control panel</p>
+                <p><a href="/api/friends"> friends</a></p>
+            </div>
+
+        </div>
+
+
+        <script type="text/javascript">
+            // on button click takes the form and saves it as an object
+            var timer;
+            $("#add-btn").on("click", function (event) {
+                event.preventDefault();
+                var newPerson = {
+                    name: $("#name").val().trim(),
+                    scores: [
+                        $("#pizza").val().trim(), $("#kitkat").val().trim(), $("#music").val().trim(), $("#cheese").val().trim(), $("#cats").val().trim(), $("#dogs").val().trim(), $("#travel").val().trim(), $("#pringles").val().trim(), $("#tv").val().trim(), $("#movies").val().trim() 
+                    ]
+                };
+
+                // posts the new person
+                $.post("/api/friends", newPerson)
+                    .then(function (data) {
+                        console.log("add.html", data);
+                        alert("Adding you to the database and searching for a friend. should take about 5 seconds");
+                    });
+
+
+                var personalTotal = 0;
+                for (var i = 0; i < newPerson.scores.length; i++) {
+                    personalTotal += parseInt(newPerson.scores[i]);
+                }
+                console.log("your personal total is: " + personalTotal);
+
+
+                // delayed .get to give server time
+                timer = setTimeout(function(){
+                    $.get("/api/friends", function(data) {
+                    // console.log(data)
+                    var compatability = [];
+                    var friendScore = [];
+                    var idealFriend = 0;
+                    var people = [];
+                    for (var i = 0; i < data.length-1; i++) {
+                        var total = 0;
+                        people.push(data[i])
+                        for (var j = 0; j < data[i].scores.length; j++) {
+                            total += parseInt(data[i].scores[j])
+                        }
+                        compatability.push(total)
+                        
+                    }
+                    // console.log(compatability);
+                    // console.log(people)
+
+
+
+                    
+                    for (var i = 0; i < compatability.length; i++) {
+                        var friendly = Math.abs(compatability[i] - personalTotal) 
+                        friendScore.push(friendly)
+                    };
+
+                    function indexOfSmallest(arr) {
+                        idealFriend = arr.indexOf(Math.min.apply(Math, arr));
+
+                    }
+                    indexOfSmallest(friendScore)
+
+                    // console.log(idealFriend);
+
+                    function displayFriend() {
+                        var newFriend = people[idealFriend].name;
+                        var newFriendPic = people[idealFriend].pic;
+                        console.log(newFriend);
+                        
+                        var html = `<div class='modal fade' id='myModal'><div class='modal-dialog'><div class='modal-content'><div class='modal-header'><h4 class='modal-title'>YOUR NEW FRIEND IS...</h4><button type='button' class='close' data-dismiss='modal'>x</button></div><div class='modal-body'><p>${newFriend}</p><span>${newFriendPic}</span></div><div class='modal-footer'><button type='button' class='btn btn-danger' data-dismiss='modal'>Close</button></div></div></div></div></div>`
+                        $("#modal").append(html)
+
+                    };
+                    displayFriend();
+                    $("#myModal").modal()
+                    
+                })
+                },5000);
+
+                
+
+            
+            });
+        </script>
+</body>
+
+</html>
